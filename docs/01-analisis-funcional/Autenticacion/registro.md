@@ -1,248 +1,425 @@
 # Registro de usuario
-   
+
 ## 1. Objetivo
--Permitir que una persona cree una cuenta en ROSLYNDER proporcionando sus datos personales y credenciales de acceso, aceptando     los términos y condiciones y verificando su correo electrónico para activar la cuenta.
--La cuenta permanecerá en estado "Pendiente de activación" hasta que el usuario verifique correctamente su correo electrónico.
-## 2. Datos
-| Dato                                 | ¿Obligatorio? | Observación                    |
-| ------------------------------------ | ------------- | ------------------------------ |
-| Nombre                               | Sí            | Identificación personal        |
-| Apellido                             | Sí            | Identificación personal        |
-| Nombre de usuario                    | Sí            | Identificador para acceso      |
-| Correo electrónico                   | Sí            | Verificación y recuperación    |
-| Contraseña                           | Sí            | Credencial de acceso           |
-| Confirmación de contraseña           | Sí            | Validación del registro        |
-| Provincia                            | Sí            | Ubicación                      |
-| Ciudad                               | Sí            | Ubicación                      |
-| Dirección                            | Sí            | Ubicación/domicilio            |
-| Teléfono                             | Sí            | Contacto                       |
-| Fecha de nacimiento                  | No            | Dato opcional                  |
-| Aceptación de términos y condiciones | Sí            | Requisito para crear la cuenta |
+
+Permitir que una persona cree una cuenta en ROSLYNDER proporcionando sus datos personales y de contacto, aceptando los términos y condiciones y verificando su correo electrónico.
+
+Una vez verificada la cuenta, el usuario podrá iniciar sesión y utilizar las funciones disponibles según su estado y roles asignados.
+
+El registro no permite obtener directamente el rol de administrador ni convierte automáticamente al usuario en vendedor.
+
+---
+
+## 2. Datos solicitados
+
+| Dato                       | Obligatorio | Descripción                                                       |
+| -------------------------- | ----------- | ----------------------------------------------------------------- |
+| Nombres                    | Sí          | Nombres del usuario.                                              |
+| Apellidos                  | Sí          | Apellidos del usuario.                                            |
+| Nombre de usuario          | Sí          | Identificador único utilizado para iniciar sesión.                |
+| Correo electrónico         | Sí          | Correo utilizado para identificación y verificación de la cuenta. |
+| Contraseña                 | Sí          | Credencial de acceso.                                             |
+| Confirmación de contraseña | Sí          | Debe coincidir con la contraseña.                                 |
+| Provincia                  | Sí          | Provincia de residencia seleccionada de una lista válida.         |
+| Ciudad                     | Sí          | Ciudad correspondiente a la provincia seleccionada.               |
+| Fecha de nacimiento        | No          | Dato opcional.                                                    |
+| Teléfono                   | Sí          | Número telefónico del usuario.                                    |
+| Dirección                  | Sí          | Dirección de residencia o contacto.                               |
+| Términos y condiciones     | Sí          | El usuario debe aceptar los términos para completar el registro.  |
+
+---
 
 ## 3. Validaciones
 
+### 3.1 Nombres y apellidos
 
-### Datos personales
+* Son campos obligatorios.
+* No pueden estar vacíos.
+* Deben contener información válida.
 
-- **Nombre:** obligatorio.
-- **Apellido:** obligatorio.
-- **Dirección:** obligatoria.
-- **Provincia:** obligatoria.
-- **Ciudad:** obligatoria y debe corresponder a la provincia seleccionada.
-- **Teléfono:** obligatorio y debe contener exactamente 9 dígitos numéricos para Ecuador.
-- **Fecha de nacimiento:** opcional. Si se proporciona, debe corresponder a una fecha válida.
+### 3.2 Nombre de usuario
 
-### Credenciales
+* Es obligatorio.
+* Debe contener entre **6 y 16 caracteres**.
+* Solo se permiten letras y números.
+* No se permiten espacios ni caracteres especiales.
+* Debe ser único dentro de ROSLYNDER.
+* Una vez registrado, el nombre de usuario no podrá modificarse.
 
-- **Nombre de usuario:** obligatorio.
-- Debe tener una longitud mínima de 6 y máxima de 16 caracteres.
-- Debe cumplir con el formato de caracteres permitido.
-- Debe ser único dentro de ROSLYNDER.
-- **Correo electrónico:** obligatorio.
-- Debe cumplir con un formato válido de correo electrónico.
-- Debe ser único dentro de ROSLYNDER.
-- **Contraseña:** obligatoria.
-- Debe tener una longitud mínima de 6 y máxima de 16 caracteres.
-- Debe contener al menos una letra mayúscula, una letra minúscula, un número y un carácter especial.
-- **Confirmación de contraseña:** obligatoria.
-- Debe coincidir exactamente con la contraseña ingresada.
+### 3.3 Correo electrónico
 
-### Términos y condiciones
+* Es obligatorio.
+* Debe cumplir un formato válido de correo electrónico.
+* Debe ser único dentro de ROSLYNDER.
+* El acceso al correo se comprobará mediante el proceso de verificación.
+* El correo utilizado durante el registro será el correo asociado a la cuenta.
 
-- El usuario debe aceptar los términos y condiciones para completar el registro.
-- 
+### 3.4 Contraseña
+
+La contraseña:
+
+* Es obligatoria.
+* Debe tener entre **6 y 16 caracteres**.
+* Debe contener al menos:
+
+  * una letra mayúscula;
+  * una letra minúscula;
+  * un número;
+  * un carácter especial.
+
+### 3.5 Confirmación de contraseña
+
+* Es obligatoria.
+* Debe coincidir exactamente con la contraseña ingresada.
+
+### 3.6 Provincia y ciudad
+
+* La provincia es obligatoria.
+* La provincia debe seleccionarse de las opciones disponibles.
+* La ciudad es obligatoria.
+* La ciudad debe corresponder a la provincia seleccionada.
+
+### 3.7 Fecha de nacimiento
+
+* Es opcional.
+* Si se proporciona, debe corresponder a una fecha válida.
+* En esta versión no se establece una edad mínima, salvo que posteriormente se defina una regla de negocio que lo requiera.
+
+### 3.8 Teléfono
+
+* Es obligatorio.
+* Debe contener exactamente **9 dígitos numéricos**, de acuerdo con el formato definido para números móviles en Ecuador.
+* No se permiten letras ni caracteres no contemplados por el formato establecido.
+
+### 3.9 Dirección
+
+* Es obligatoria.
+* No puede estar vacía.
+
+### 3.10 Términos y condiciones
+
+* El usuario debe aceptar los términos y condiciones.
+* Sin aceptación, el registro no puede completarse.
+
+### 3.11 Validación del sistema
+
+Las validaciones realizadas en el navegador sirven para proporcionar una respuesta inmediata al usuario.
+
+La validación definitiva debe realizarse en el servidor antes de crear la cuenta.
+
+---
+
 ## 4. Reglas de negocio
 
-### Creación de la cuenta
+### RN-REG-01 — Correo único
 
-1. El usuario podrá crear una cuenta proporcionando los datos requeridos.
-2. El correo electrónico debe ser único dentro de ROSLYNDER.
-3. El nombre de usuario debe ser único dentro de ROSLYNDER.
-4. Una cuenta nueva se creará inicialmente en estado `Pendiente de activación`.
-5. Una vez completado correctamente el registro, el sistema enviará un correo de verificación a la dirección proporcionada.
-6. La cuenta permanecerá en estado `Pendiente de activación` hasta que el usuario verifique correctamente su correo electrónico.
-7. Una cuenta en estado `Pendiente de activación` no podrá iniciar sesión.
+Cada cuenta de ROSLYNDER debe tener un correo electrónico único.
 
-### Verificación de la cuenta
+### RN-REG-02 — Nombre de usuario único
 
-8. El sistema generará un enlace de activación asociado a la cuenta registrada.
-9. El enlace de activación tendrá una vigencia de 24 horas.
-10. La verificación correcta cambiará el estado de la cuenta de `Pendiente de activación` a `Activa`.
-11. Un enlace de activación utilizado, inválido o expirado no podrá utilizarse nuevamente.
-12. El usuario podrá solicitar un nuevo enlace de activación cuando corresponda.
-13. La generación de un nuevo enlace invalidará el enlace anterior.
+Cada cuenta debe tener un nombre de usuario único.
 
+### RN-REG-03 — Nombre de usuario permanente
 
-### Roles y capacidades
+El nombre de usuario no podrá modificarse después del registro.
 
-14. Una cuenta activa podrá utilizar las funciones correspondientes al rol de `COMPRADOR`.
-15. Un usuario podrá habilitar posteriormente las funciones de `VENDEDOR` sin crear una segunda cuenta.
-16. Para habilitar las funciones de vendedor, el usuario deberá completar la información comercial requerida y superar las validaciones establecidas.
-17. Un mismo usuario podrá desempeñar las funciones de `COMPRADOR` y `VENDEDOR`.
-18. El rol `ADMINISTRADOR` no podrá obtenerse mediante el registro público.
-19. La asignación del rol `ADMINISTRADOR` será realizada mediante un proceso administrativo.
+### RN-REG-04 — Estado inicial de la cuenta
 
-### Protección y control
+Cuando el registro se completa correctamente, la cuenta se crea en estado:
 
-20. Si el correo electrónico ya se encuentra registrado, el sistema no permitirá crear una nueva cuenta con dicho correo.
-21. Si el nombre de usuario ya se encuentra registrado, el sistema no permitirá crear una nueva cuenta con dicho nombre.
-22. El sistema deberá limitar solicitudes repetitivas relacionadas con la activación de cuentas, como el reenvío del correo de verificación.
-23. Los eventos relevantes del proceso de registro y activación deberán poder registrarse para fines de seguridad y trazabilidad.
-24. Ante un error del servidor, el sistema deberá mostrar al usuario un mensaje comprensible sin revelar información técnica interna.
-25. Los errores del proceso deberán registrarse internamente cuando sea necesario para facilitar su diagnóstico y seguimiento.
+**Pendiente de verificación**
 
+### RN-REG-05 — Verificación de correo
 
-## 5. Flujo
+El sistema enviará al correo registrado un enlace único para verificar la cuenta.
 
+### RN-REG-06 — Vigencia del enlace
 
-1. El visitante selecciona la opción de registro en ROSLYNDER.
+El enlace de verificación tendrá una vigencia de **24 horas** y será de un solo uso.
 
-2. El sistema muestra el formulario de registro.
+### RN-REG-07 — Cuenta pendiente
 
-3. El usuario completa los datos requeridos y, opcionalmente, la fecha de nacimiento.
+Mientras la cuenta permanezca en estado **Pendiente de verificación**, el usuario no podrá iniciar sesión.
 
-4. El usuario acepta los términos y condiciones.
+### RN-REG-08 — Activación
 
-5. El usuario envía el formulario.
+Cuando el usuario complete correctamente la verificación del correo, la cuenta cambiará de:
 
-6. El sistema valida los datos ingresados.
+**Pendiente de verificación → Activa**
 
-7. Si existen errores de validación, el sistema informa los campos que deben corregirse y permite volver a enviar el formulario.
+### RN-REG-09 — Rol inicial
 
-8. Si los datos son válidos, el sistema verifica que el correo electrónico y el nombre de usuario no estén registrados previamente.
+Una cuenta activa podrá utilizar ROSLYNDER como **COMPRADOR**.
 
-9. Si el correo electrónico o el nombre de usuario ya están registrados, el sistema informa la situación y no crea una nueva cuenta.
+No es necesario que el usuario seleccione manualmente el rol de comprador durante el registro.
 
-10. Si toda la información es válida y no existen duplicados, el sistema crea la cuenta en estado `Pendiente de activación`.
+### RN-REG-10 — Una cuenta para diferentes funciones
 
-11. El sistema genera un enlace de verificación y lo envía al correo electrónico registrado.
+Un mismo usuario podrá utilizar la misma cuenta para las funciones de comprador y vendedor.
 
-12. El usuario accede al enlace recibido.
+No será necesario crear una segunda cuenta para vender.
 
-13. El sistema valida el enlace de verificación.
+### RN-REG-11 — Habilitación de funciones de vendedor
 
-14. Si el enlace es válido y se encuentra vigente, el sistema activa la cuenta.
+Para habilitar las funciones de vendedor, un usuario activo deberá seleccionar la opción correspondiente y completar la información comercial requerida.
 
-15. La cuenta cambia de `Pendiente de activación` a `Activa`.
+### RN-REG-12 — Validación de información comercial
 
-16. El usuario podrá iniciar sesión utilizando sus credenciales.
+Las funciones de vendedor se habilitarán una vez que la información comercial requerida haya sido completada y validada según las reglas establecidas para el perfil comercial.
 
-17. Si el enlace es inválido, ya fue utilizado o expiró, el sistema no modifica el estado de la cuenta y permite solicitar un nuevo enlace cuando corresponda.
-18. VISITANTE
+### RN-REG-13 — Roles comprador y vendedor
+
+Un mismo usuario podrá tener simultáneamente las funciones correspondientes a:
+
+* COMPRADOR
+* VENDEDOR
+
+La asignación de estas funciones se gestionará mediante el sistema de roles.
+
+### RN-REG-14 — Administrador
+
+El rol **ADMINISTRADOR** no podrá obtenerse mediante el registro público.
+
+Un usuario no podrá asignarse a sí mismo este rol.
+
+La asignación del rol de administrador deberá realizarse mediante el mecanismo administrativo correspondiente.
+
+### RN-REG-15 — Navegación pública
+
+Las personas podrán navegar por las publicaciones disponibles sin necesidad de registrarse.
+
+Las acciones que requieran una cuenta deberán solicitar al usuario que se registre o inicie sesión.
+
+### RN-REG-16 — Información de seguridad
+
+Los eventos relacionados con seguridad, autenticación y registro podrán generar información de auditoría, como fecha, hora, dirección IP, navegador y resultado de la operación.
+
+Esta información corresponde al control de seguridad y no forma parte de los datos personales básicos del usuario.
+
+---
+
+## 5. Flujo principal
+
+```text
+VISITANTE
+    │
+    ▼
+Explora ROSLYNDER
+    │
+    ▼
+Intenta realizar una acción que requiere cuenta
+    │
+    ▼
+¿Tiene una cuenta?
+    ├── NO ──► Registro
+    │
+    └── SÍ ──► Inicio de sesión
+```
+
+### Registro
+
+```text
+Registro
    │
    ▼
-Formulario de registro
+Completar formulario
    │
    ▼
-Completa datos
+Validar datos
    │
-   ▼
-Acepta términos
+   ├── Datos incorrectos
+   │       │
+   │       ▼
+   │   Mostrar errores
+   │       │
+   │       └────► Corregir datos
    │
-   ▼
-Enviar registro
-   │
-   ▼
-Validaciones
-   │
-   ├── ❌ Error ──→ Corregir datos
-   │
-   ▼
-¿Correo/usuario disponibles?
-   │
-   ├── ❌ No ──→ Informar al usuario
-   │
-   ▼
-Crear cuenta
-   │
-   ▼
-PENDIENTE DE ACTIVACIÓN
-   │
-   ▼
+   └── Datos correctos
+           │
+           ▼
+     Crear cuenta
+           │
+           ▼
+Pendiente de verificación
+           │
+           ▼
 Enviar correo de verificación
-   │
-   ▼
+           │
+           ▼
 Usuario abre enlace
-   │
-   ▼
+           │
+           ▼
 ¿Enlace válido?
-   │
-   ├── ❌ No ──→ Solicitar nuevo enlace
-   │
-   ▼
-ACTIVA
-   │
-   ▼
-INICIAR SESIÓN
+      ├── NO ──► Mostrar motivo
+      │
+      └── SÍ
+           │
+           ▼
+     Cuenta ACTIVA
+           │
+           ▼
+      Iniciar sesión
+           │
+           ▼
+       COMPRADOR
+```
+
+### Conversión a vendedor
+
+El proceso de registro no convierte automáticamente al usuario en vendedor.
+
+El proceso posterior será:
+
+```text
+CUENTA ACTIVA
+      │
+      ▼
+   COMPRADOR
+      │
+      ▼
+"QUIERO VENDER"
+      │
+      ▼
+Completar información comercial
+      │
+      ▼
+Validar información
+      │
+      ▼
+   VENDEDOR
+      │
+      ▼
+Funciones comerciales
+```
+
+---
 
 ## 6. Casos especiales
 
-### 6.1 Correo electrónico ya registrado
+### CE-REG-01 — Correo ya registrado
 
-- Si el correo electrónico ingresado ya pertenece a una cuenta registrada, el sistema no permitirá crear una nueva cuenta con dicho correo.
-- El sistema deberá informar al usuario que el correo ya se encuentra registrado.
-- Por razones de seguridad, la información mostrada no deberá revelar datos de la cuenta existente.
-- El intento podrá registrarse para fines de seguridad y trazabilidad.
+Si el correo ingresado ya pertenece a una cuenta:
 
-### 6.2 Nombre de usuario ya registrado
+* El sistema informará que el correo ya está registrado.
+* No se creará una nueva cuenta con ese correo.
+* El usuario podrá utilizar el inicio de sesión o recuperación de contraseña según corresponda.
 
-- Si el nombre de usuario ingresado ya se encuentra registrado, el sistema no permitirá utilizarlo nuevamente.
-- El sistema informará al usuario que debe seleccionar otro nombre de usuario.
-- El intento podrá registrarse para fines de seguridad y trazabilidad.
+El evento podrá registrarse como evento de seguridad para fines de control y auditoría.
 
-### 6.3 Correo de activación no recibido
+### CE-REG-02 — Nombre de usuario ya registrado
 
-- Si el usuario no recibe el correo de activación, podrá solicitar el reenvío del enlace.
-- El sistema deberá limitar la cantidad de solicitudes de reenvío para evitar abusos.
-- El nuevo enlace deberá invalidar el enlace de activación anterior.
-- La cuenta permanecerá en estado `Pendiente de activación` hasta completar correctamente la verificación.
+Si el nombre de usuario ya existe:
 
-### 6.4 Enlace de activación expirado
+* El sistema informará al usuario.
+* No se creará la cuenta.
+* El usuario deberá seleccionar otro nombre de usuario.
 
-- Si el usuario intenta utilizar un enlace cuya vigencia ha finalizado, el sistema deberá informar que el enlace ha expirado.
-- El sistema no deberá modificar el estado de la cuenta.
-- El usuario podrá solicitar un nuevo enlace de activación cuando corresponda.
+### CE-REG-03 — Correo de verificación no recibido
 
-### 6.5 Enlace de activación ya utilizado
+El usuario podrá solicitar el reenvío del correo de verificación.
 
-- Si el usuario intenta utilizar nuevamente un enlace que ya fue utilizado, el sistema deberá informar que el enlace ya no es válido.
-- El sistema no deberá modificar nuevamente el estado de la cuenta.
-- Si la cuenta ya se encuentra activa, el usuario podrá continuar con el inicio de sesión.
+El sistema deberá aplicar límites para evitar solicitudes excesivas.
 
-### 6.6 Pérdida de conexión durante el registro
+### CE-REG-04 — Enlace de verificación vencido
 
-- Si se pierde la conexión mientras el usuario completa el formulario, la información ingresada deberá conservarse temporalmente cuando sea técnicamente posible.
-- Si la pérdida de conexión ocurre durante el envío, el sistema deberá evitar la creación de registros duplicados cuando el usuario intente nuevamente.
-- El usuario deberá recibir una indicación clara de que debe verificar o reintentar el envío.
+Si el enlace supera las 24 horas:
 
-### 6.7 Registro abandonado
+* No podrá utilizarse para verificar la cuenta.
+* El sistema informará que el enlace ha vencido.
+* El usuario podrá solicitar un nuevo enlace.
 
-- Si el usuario abandona el formulario antes de completar el registro, los datos ingresados podrán conservarse temporalmente en el navegador para permitir continuar posteriormente.
-- La información temporal de un registro no enviado no deberá considerarse una cuenta creada.
-- Si el usuario completa posteriormente el registro, los datos deberán volver a validarse antes de crear la cuenta.
-- El mecanismo utilizado para conservar temporalmente los datos se definirá durante la implementación.
+### CE-REG-05 — Enlace ya utilizado
 
-### 6.8 Error del servidor
+Si el usuario intenta utilizar nuevamente un enlace de verificación:
 
-- Si ocurre un error interno durante el registro, el sistema deberá mostrar un mensaje comprensible al usuario.
-- No se deberán mostrar detalles técnicos, mensajes internos ni información sensible.
-- El error deberá registrarse internamente para facilitar su diagnóstico y seguimiento.
-- Cuando sea posible, el usuario deberá poder reintentar el proceso sin perder la información ingresada.
+* El sistema rechazará el enlace.
+* Si la cuenta ya está activa, informará que la cuenta ya fue verificada.
 
-### 6.9 Error en el envío del correo de activación
+### CE-REG-06 — Nuevo enlace de verificación
 
-- Si la cuenta fue creada correctamente pero el correo de activación no pudo enviarse, la cuenta deberá permanecer en estado `Pendiente de activación`.
-- El sistema deberá registrar el error del envío.
-- El usuario deberá poder solicitar nuevamente el correo de activación.
-- El sistema podrá realizar nuevos intentos de envío de acuerdo con las reglas de control establecidas.
-- La cuenta no deberá activarse hasta que el usuario complete correctamente la verificación.
-## 7. Pendientes
-## 7. Pendientes
+Cuando se genere un nuevo enlace:
 
-- Definir el formato exacto permitido para `nombre_usuario`, especialmente si se permitirán caracteres como `_` (guion bajo) o `.` (punto), además de letras y números.
-- Definir si ROSLYNDER establecerá una edad mínima para crear una cuenta.
-- Definir el mecanismo y los límites para solicitar nuevamente el correo de activación.
-- Definir las condiciones y el tiempo de conservación de los datos de un registro abandonado.
-- Definir posteriormente los mecanismos técnicos para registrar eventos de seguridad y trazabilidad.
+* El enlace anterior quedará invalidado.
+* Solo el enlace vigente podrá utilizarse para verificar la cuenta.
 
+### CE-REG-07 — Pérdida de conexión durante el registro
 
+Si se pierde la conexión:
+
+* El sistema deberá informar al usuario.
+* Los datos que todavía no hayan sido enviados al servidor no deben considerarse una cuenta creada.
+* Cuando sea técnicamente posible, el formulario podrá conservar temporalmente la información para evitar que el usuario tenga que ingresarla nuevamente.
+
+### CE-REG-08 — Abandono del registro
+
+Si el usuario abandona el formulario antes de enviarlo:
+
+* No se crea una cuenta.
+* La información podrá conservarse temporalmente en el navegador para facilitar la continuación del proceso.
+
+Si el formulario ya fue enviado correctamente:
+
+* La cuenta sí existe.
+* Su estado permanecerá como **Pendiente de verificación** hasta completar la verificación.
+
+### CE-REG-09 — Error del servidor
+
+Si ocurre un error durante el registro:
+
+* El sistema mostrará un mensaje comprensible.
+* No deberá crear una cuenta incompleta.
+* El error podrá registrarse para fines técnicos y de auditoría.
+* Cuando sea posible, el usuario podrá volver a intentar la operación sin perder la información ingresada.
+
+### CE-REG-10 — Error en el envío del correo
+
+Si ROSLYNDER no puede enviar el correo de verificación:
+
+* El error deberá registrarse.
+* El sistema podrá realizar nuevos intentos de envío.
+* El usuario podrá solicitar posteriormente un nuevo enlace.
+
+### CE-REG-11 — Intentos repetidos
+
+Las solicitudes repetidas de registro, verificación o reenvío de enlaces podrán estar sujetas a límites de frecuencia y controles de seguridad.
+
+---
+
+## 7. Estados relacionados con el registro
+
+El registro utiliza inicialmente los siguientes estados de cuenta:
+
+| Estado                    | Descripción                                                         |
+| ------------------------- | ------------------------------------------------------------------- |
+| Pendiente de verificación | La cuenta fue creada, pero el correo todavía no ha sido verificado. |
+| Activa                    | El correo fue verificado y la cuenta puede utilizarse.              |
+
+Los estados relacionados con bloqueos de seguridad o suspensiones administrativas se gestionarán en las reglas correspondientes de **Inicio de sesión**, **Gestión de sesiones** y **Administración de usuarios**.
+
+---
+
+## 8. Relación con otros módulos
+
+El registro de usuario se relaciona posteriormente con:
+
+* **Verificación de correo:** confirma el acceso al correo registrado.
+* **Inicio de sesión:** permite acceder a la cuenta una vez activa.
+* **Recuperación de contraseña:** permite recuperar el acceso mediante el correo registrado.
+* **Gestión de sesiones:** controla las sesiones activas.
+* **Roles y permisos:** determina las funciones disponibles para el usuario.
+* **Perfil comercial:** permite habilitar las funciones de vendedor.
+* **Publicaciones:** permite al vendedor gestionar sus productos.
+* **Administración:** permite la supervisión de usuarios y vendedores.
+
+---
+
+## 9. Pendientes
+
+Los siguientes puntos no son necesarios para cerrar el funcionamiento básico del registro y podrán definirse posteriormente:
+
+* Política de eliminación de cuentas que permanezcan indefinidamente en estado **Pendiente de verificación**.
+* Cantidad máxima exacta de reenvíos del correo de verificación.
+* Tiempo mínimo entre solicitudes de reenvío.
+* Reglas detalladas de auditoría y conservación de eventos de seguridad.
+* Política específica para datos almacenados temporalmente durante un registro abandonado.
+* Reglas adicionales relacionadas con la fecha de nacimiento, si posteriormente fueran necesarias.
