@@ -2,482 +2,440 @@
 
 ## 1. Objetivo
 
-Permitir que un usuario con una cuenta activa se autentique mediante sus credenciales y acceda de forma segura a las funciones disponibles según su estado y roles asignados.
+Permitir que un usuario con una cuenta en estado **Activa** se autentique mediante sus credenciales y acceda a las funcionalidades correspondientes a los roles que tenga asignados.
 
-El inicio de sesión deberá comprobar las credenciales y el estado de la cuenta antes de crear una sesión.
+El inicio de sesión no modifica los roles del usuario ni el estado de su cuenta.
 
 ---
 
-## 2. Datos
+## 2. Datos involucrados
 
 ### 2.1 Datos proporcionados por el usuario
 
-| Dato                                   | Obligatorio | Descripción                                       |
-| -------------------------------------- | ----------- | ------------------------------------------------- |
-| Nombre de usuario o correo electrónico | Sí          | Identificador utilizado para localizar la cuenta. |
-| Contraseña                             | Sí          | Credencial utilizada para autenticar al usuario.  |
+* Nombre de usuario o correo electrónico
+* Contraseña
 
-El usuario podrá utilizar indistintamente su **nombre de usuario** o **correo electrónico** para iniciar sesión.
+### 2.2 Datos gestionados por el sistema
 
-### 2.2 Información generada por el sistema
-
-Durante el proceso de autenticación, ROSLYNDER podrá registrar información relacionada con la seguridad:
-
-* Fecha y hora del intento.
-* Resultado del intento.
-* Cantidad de intentos fallidos.
-* Dirección IP.
-* Información del navegador o dispositivo, cuando corresponda.
-* Fecha y hora del bloqueo, cuando se produzca.
-
-Esta información corresponde a seguridad y auditoría y no forma parte de los datos que el usuario debe introducir en el formulario.
+* Identificador de la cuenta
+* Estado actual de la cuenta
+* Fecha y hora del intento de autenticación
+* Resultado del intento de autenticación
+* Cantidad de intentos fallidos
+* Información necesaria para aplicar un bloqueo de seguridad
+* Información relacionada con la sesión
+* Información de auditoría y seguridad
 
 ---
 
 ## 3. Validaciones
 
-### 3.1 Usuario o correo electrónico
+### 3.1 Identificador
 
 * Es obligatorio.
 * Puede corresponder al nombre de usuario o al correo electrónico registrado.
-* Debe corresponder a una cuenta registrada.
+* Debe estar asociado a una cuenta existente.
 
 ### 3.2 Contraseña
 
 * Es obligatoria.
-* Debe coincidir con la credencial almacenada de forma segura.
-* La contraseña no debe almacenarse en texto plano.
+* Debe coincidir con la credencial registrada para la cuenta.
+* No debe mostrarse durante su ingreso.
+* Su validación debe realizarse en el servidor.
 
-### 3.3 Cuenta inexistente
+### 3.3 Estado de la cuenta
 
-Si no existe una cuenta correspondiente al identificador proporcionado, el acceso será rechazado.
+Antes de validar la contraseña, el sistema debe comprobar el estado actual de la cuenta.
 
-El sistema no deberá revelar información innecesaria que permita determinar si una cuenta específica está registrada.
+| Estado                    | Inicio de sesión |
+| ------------------------- | ---------------- |
+| Pendiente de verificación | No permitido     |
+| Activa                    | Permitido        |
+| Bloqueada                 | No permitido     |
+| Suspendida                | No permitido     |
 
-### 3.4 Contraseña incorrecta
+### 3.4 Intentos fallidos
 
-Si la contraseña no coincide:
-
-* El acceso será rechazado.
-* El intento podrá registrarse para fines de seguridad.
-* Se incrementará el contador de intentos fallidos.
-
-### 3.5 Límite de intentos fallidos
-
-Cuando el número de intentos fallidos alcance el límite definido por ROSLYNDER:
-
-* La cuenta será bloqueada temporalmente.
-* El inicio de sesión normal quedará restringido.
-* Se aplicará el mecanismo de desbloqueo establecido.
-
-El número exacto de intentos permitidos queda pendiente de definición.
-
-### 3.6 Cuenta pendiente de verificación
-
-Si las credenciales son correctas pero la cuenta se encuentra en estado:
-
-**Pendiente de verificación**
-
-el acceso será rechazado.
-
-El sistema informará al usuario que debe completar la verificación de su correo electrónico.
-
-### 3.7 Cuenta bloqueada
-
-Si la cuenta se encuentra bloqueada debido a intentos fallidos:
-
-* No podrá acceder mediante el inicio de sesión normal.
-* Deberá utilizar el mecanismo de desbloqueo establecido por ROSLYNDER.
-
-### 3.8 Cuenta suspendida
-
-Si la cuenta fue suspendida administrativamente:
-
-* El acceso será rechazado.
-* El usuario no podrá iniciar sesión mientras la suspensión permanezca activa.
-
-El bloqueo de seguridad y la suspensión administrativa son situaciones diferentes.
-
-### 3.9 Cuenta activa
-
-El acceso podrá completarse cuando:
-
-* Las credenciales sean correctas.
-* La cuenta se encuentre activa.
-* No exista una restricción de acceso.
-
-En este caso, el sistema creará una sesión y permitirá el acceso al dashboard correspondiente.
-
-### 3.10 Validación frontend y backend
-
-Las validaciones realizadas mediante HTML y JavaScript sirven principalmente para proporcionar una respuesta inmediata al usuario.
-
-La validación definitiva de:
-
-* credenciales;
-* estado de cuenta;
-* bloqueo;
-* suspensión;
-* permisos;
-* creación de sesión;
-
-deberá realizarse en el servidor.
+* Cada autenticación incorrecta deberá registrarse.
+* Los intentos fallidos deberán acumularse según las reglas de seguridad establecidas.
+* Al alcanzar el límite definido, la cuenta podrá pasar a estado **Bloqueada**.
 
 ---
 
 ## 4. Reglas de negocio
 
-### RN-LOGIN-01 — Identificación de usuario
+### RN-LOGIN-01 — Cuenta habilitada para iniciar sesión
 
-El usuario podrá iniciar sesión utilizando su nombre de usuario o correo electrónico.
+Solo una cuenta en estado **Activa** puede iniciar sesión normalmente.
 
-### RN-LOGIN-02 — Contraseña obligatoria
+### RN-LOGIN-02 — Identificación del usuario
 
-La contraseña será necesaria para completar la autenticación.
+El usuario podrá identificarse mediante su **nombre de usuario o correo electrónico**, junto con su contraseña.
 
-### RN-LOGIN-03 — Cuenta activa
+### RN-LOGIN-03 — Cuenta no encontrada
 
-Solo una cuenta en estado **Activa** podrá completar correctamente el inicio de sesión.
+Si no existe una cuenta asociada al identificador proporcionado, el sistema rechazará la autenticación sin revelar información innecesaria sobre la existencia de cuentas.
 
-### RN-LOGIN-04 — Cuenta pendiente
+### RN-LOGIN-04 — Cuenta pendiente de verificación
 
 Una cuenta en estado **Pendiente de verificación** no podrá iniciar sesión.
 
-### RN-LOGIN-05 — Cuenta suspendida
+El sistema deberá informar al usuario que debe verificar su correo electrónico.
 
-Una cuenta suspendida administrativamente no podrá acceder mientras permanezca suspendida.
+### RN-LOGIN-05 — Cuenta bloqueada
 
-### RN-LOGIN-06 — Registro de intentos
+Una cuenta en estado **Bloqueada** no podrá iniciar sesión normalmente.
 
-Cada intento de autenticación incorrecto podrá registrarse para fines de seguridad y auditoría.
+El usuario podrá iniciar el proceso de desbloqueo establecido por el sistema.
 
-### RN-LOGIN-07 — Contador de intentos
+### RN-LOGIN-06 — Cuenta suspendida
 
-Los intentos fallidos se contabilizarán para determinar si corresponde aplicar un bloqueo de seguridad.
+Una cuenta en estado **Suspendida** no podrá iniciar sesión ni utilizar funcionalidades autenticadas.
 
-### RN-LOGIN-08 — Bloqueo por intentos fallidos
+La reactivación dependerá de una acción autorizada del administrador.
 
-Al alcanzar el límite de intentos fallidos definido por ROSLYNDER, la cuenta será bloqueada temporalmente.
+### RN-LOGIN-07 — Validación de contraseña
 
-### RN-LOGIN-09 — Restricción de cuenta bloqueada
+La contraseña será validada únicamente después de comprobar que la cuenta existe y se encuentra en un estado que permita la autenticación.
 
-Una cuenta bloqueada no podrá acceder mediante el proceso normal de inicio de sesión.
+### RN-LOGIN-08 — Credenciales incorrectas
 
-### RN-LOGIN-10 — Desbloqueo
+Cuando la contraseña sea incorrecta, el sistema rechazará la autenticación y registrará el intento fallido.
 
-El usuario podrá utilizar el mecanismo de desbloqueo establecido por ROSLYNDER para recuperar el acceso.
+### RN-LOGIN-09 — Control de intentos fallidos
 
-### RN-LOGIN-11 — Código de desbloqueo
+El sistema acumulará los intentos fallidos de autenticación y aplicará el bloqueo de la cuenta cuando se alcance el límite definido.
 
-El mecanismo de desbloqueo utilizará un código temporal de un solo uso.
+### RN-LOGIN-10 — Autenticación exitosa
 
-### RN-LOGIN-12 — Vigencia del código
+Cuando las credenciales sean correctas y la cuenta esté activa, el sistema permitirá el acceso y creará una **sesión autenticada**.
 
-El código de desbloqueo tendrá una vigencia máxima de **24 horas**.
+### RN-LOGIN-11 — Roles y funcionalidades
 
-### RN-LOGIN-13 — Invalidación de códigos anteriores
+Después de una autenticación exitosa, las funcionalidades disponibles dependerán de los **roles y permisos asignados al usuario**, no únicamente del estado de la cuenta.
 
-La generación de un nuevo código de desbloqueo invalidará cualquier código anterior asociado al mismo proceso.
+### RN-LOGIN-12 — Múltiples roles
 
-### RN-LOGIN-14 — Código de un solo uso
+Un mismo usuario podrá tener simultáneamente más de un rol.
 
-Un código utilizado correctamente no podrá volver a utilizarse.
+Por ejemplo:
 
-### RN-LOGIN-15 — Restablecimiento de intentos
+**COMPRADOR + VENDEDOR**
 
-Una autenticación exitosa restablecerá el contador de intentos fallidos de la cuenta.
+### RN-LOGIN-13 — Estado y rol son independientes
 
-### RN-LOGIN-16 — Creación de sesión
+Cambiar el estado de una cuenta no elimina ni modifica sus roles.
 
-Después de una autenticación exitosa, el sistema creará una sesión para el usuario.
+Mientras la cuenta se encuentre restringida, el usuario no podrá utilizar las funcionalidades autenticadas correspondientes a sus roles.
 
-### RN-LOGIN-17 — Acceso según roles
+### RN-LOGIN-14 — Sesión independiente del estado
 
-Las funciones disponibles después del inicio de sesión dependerán de los roles y permisos asignados al usuario.
+Cerrar o finalizar una sesión no modifica el estado de la cuenta ni sus roles.
 
-### RN-LOGIN-18 — Una cuenta para comprador y vendedor
+### RN-LOGIN-15 — Restablecimiento del contador
 
-Un usuario que tenga funciones de comprador y vendedor utilizará la misma cuenta para ambas funciones.
+Después de una autenticación exitosa, el contador de intentos fallidos deberá reiniciarse.
 
-No será necesario crear una segunda cuenta.
+### RN-LOGIN-16 — Validación del lado del servidor
 
-### RN-LOGIN-19 — Funciones administrativas
+Las validaciones realizadas en el navegador tienen como finalidad mejorar la experiencia del usuario.
 
-Las funciones administrativas estarán disponibles únicamente para usuarios que posean el rol correspondiente.
-
-### RN-LOGIN-20 — Validación en servidor
-
-Las decisiones de autenticación y seguridad deberán ser realizadas por el servidor y no depender exclusivamente de las validaciones del navegador.
+La autenticación, comprobación de credenciales y validaciones de seguridad deberán realizarse en el servidor.
 
 ---
 
 ## 5. Flujo principal
 
 ```text
-USUARIO
-   │
-   ▼
-Selecciona "Iniciar sesión"
-   │
-   ▼
-Ingresa usuario/correo + contraseña
-   │
-   ▼
-Validación del formulario
-   │
-   ├── Campos incompletos
-   │        │
-   │        ▼
-   │   Mostrar errores
-   │        │
-   │        └────► Corregir datos
-   │
-   └── Datos completos
-            │
-            ▼
-     Validación en servidor
-            │
-            ▼
-       ¿Credenciales
-          correctas?
-        │           │
-       NO           SÍ
-        │           │
-        ▼           ▼
-Registrar       Verificar
-intento         estado de cuenta
-        │           │
-        │      ┌────┴──────────┐
-        │      │               │
-        │   No activa         Activa
-        │      │               │
-        │      ▼               ▼
-        │  Rechazar        Crear sesión
-        │                      │
-        ▼                      ▼
-¿Alcanzó límite?           Dashboard
-   │       │                   │
-  NO      SÍ                   ▼
-   │       │              Identificar
-   │       ▼              roles/permisos
-   │    Bloquear
-   │       │
-   ▼       ▼
-Reintentar / desbloqueo
+Usuario selecciona "Iniciar sesión"
+            ↓
+Sistema muestra formulario
+            ↓
+Usuario ingresa identificador + contraseña
+            ↓
+Validar campos obligatorios
+            ↓
+¿Datos completos?
+     ┌──────┴──────┐
+    NO             SÍ
+     ↓              ↓
+Mostrar error    Buscar cuenta
+                     ↓
+              ¿Cuenta encontrada?
+                ┌────┴────┐
+               NO         SÍ
+                ↓          ↓
+        Rechazar acceso  Revisar estado
+                              ↓
+                         ¿Estado Activa?
+                         ┌────┴─────┐
+                        NO          SÍ
+                         ↓           ↓
+                  Denegar acceso  Validar contraseña
+                                      ↓
+                              ¿Contraseña correcta?
+                               ┌─────┴─────┐
+                              NO           SÍ
+                               ↓            ↓
+                       Registrar intento   Reiniciar contador
+                       fallido             ↓
+                               ↓        Crear sesión
+                       ¿Alcanzó límite?    ↓
+                         ┌────┴────┐    Consultar roles
+                        NO         SÍ       ↓
+                        ↓          ↓    Permitir funciones
+                   Rechazar    Bloquear    según roles/permisos
+                   acceso       cuenta
 ```
 
 ---
 
-## 6. Flujo de autenticación correcta
+## 6. Comportamiento según el estado de la cuenta
 
-Cuando las credenciales sean correctas:
+### 6.1 Pendiente de verificación
 
 ```text
+Inicio de sesión
+      ↓
+Cuenta encontrada
+      ↓
+Estado: Pendiente de verificación
+      ↓
+Acceso denegado
+      ↓
+Informar que debe verificar el correo
+```
+
+Los intentos realizados mientras la cuenta se encuentra pendiente de verificación no deberán considerarse intentos de contraseña incorrecta.
+
+### 6.2 Bloqueada
+
+```text
+Inicio de sesión
+      ↓
+Cuenta encontrada
+      ↓
+Estado: Bloqueada
+      ↓
+Acceso denegado
+      ↓
+Ofrecer proceso de desbloqueo
+```
+
+El proceso específico de desbloqueo será definido en un módulo independiente.
+
+### 6.3 Suspendida
+
+```text
+Inicio de sesión
+      ↓
+Cuenta encontrada
+      ↓
+Estado: Suspendida
+      ↓
+Acceso denegado
+      ↓
+Informar que la cuenta se encuentra suspendida
+```
+
+La reactivación dependerá de una acción administrativa autorizada.
+
+### 6.4 Activa
+
+```text
+Inicio de sesión
+      ↓
+Cuenta encontrada
+      ↓
+Estado: Activa
+      ↓
+Validar contraseña
+      ↓
 Credenciales correctas
-        │
-        ▼
-Comprobar estado de cuenta
-        │
-        ├── Pendiente de verificación
-        │       └──► Acceso denegado
-        │
-        ├── Bloqueada
-        │       └──► Acceso denegado
-        │
-        ├── Suspendida
-        │       └──► Acceso denegado
-        │
-        └── Activa
-                │
-                ▼
-          Crear sesión
-                │
-                ▼
-            Dashboard
-                │
-                ▼
-       Identificar roles
-          y permisos
+      ↓
+Crear sesión
+      ↓
+Consultar roles y permisos
+      ↓
+Permitir funcionalidades correspondientes
 ```
 
 ---
 
-## 7. Flujo de credenciales incorrectas
+## 7. Casos especiales
+
+### 7.1 Cuenta inexistente
+
+El identificador no corresponde a una cuenta registrada.
+
+**Resultado:** autenticación rechazada mediante un mensaje que no revele información innecesaria.
+
+### 7.2 Contraseña incorrecta
+
+La cuenta existe y está activa, pero la contraseña no coincide.
+
+**Resultado:**
+
+* Rechazar autenticación.
+* Registrar intento fallido.
+* Incrementar contador.
+* Comprobar si se alcanzó el límite de seguridad.
+
+### 7.3 Cuenta pendiente de verificación
+
+**Resultado:**
+
+* No crear sesión.
+* No considerar el intento como contraseña incorrecta.
+* Informar que debe verificarse el correo.
+
+### 7.4 Cuenta bloqueada
+
+**Resultado:**
+
+* No crear sesión.
+* No permitir autenticación normal.
+* Permitir iniciar el proceso de desbloqueo.
+
+### 7.5 Cuenta suspendida
+
+**Resultado:**
+
+* No crear sesión.
+* No permitir acceso a funcionalidades autenticadas.
+* Informar la restricción correspondiente.
+
+### 7.6 Se alcanza el límite de intentos
+
+**Resultado:**
+
+* Cambiar la cuenta al estado **Bloqueada**.
+* Rechazar el acceso.
+* Permitir posteriormente el proceso de desbloqueo.
+
+### 7.7 Problemas de conexión
+
+Si la comunicación con el servidor no puede completarse, el sistema deberá informar que no fue posible procesar el inicio de sesión.
+
+No deberá crear una sesión localmente como si la autenticación hubiera sido exitosa.
+
+### 7.8 Error del servidor
+
+Si ocurre un error interno durante la autenticación, el sistema deberá mostrar un mensaje general y no exponer información técnica o sensible.
+
+---
+
+## 8. Relación con otros procesos
 
 ```text
-Credenciales incorrectas
-          │
-          ▼
-    Registrar intento
-          │
-          ▼
-Incrementar contador
-          │
-          ▼
-   ¿Alcanzó el límite?
-       │          │
-      NO          SÍ
-       │          │
-       ▼          ▼
-Nuevo intento   Bloquear
-                cuenta
-                   │
-                   ▼
-             Desbloqueo
+REGISTRO
+   ↓
+Pendiente de verificación
+   ↓
+VERIFICACIÓN DE CORREO
+   ↓
+Activa
+   ↓
+INICIO DE SESIÓN
+   ↓
+SESIÓN
+   ↓
+ROLES Y PERMISOS
+   ↓
+FUNCIONALIDADES
 ```
 
-Mientras no se alcance el límite, el usuario podrá volver a intentar iniciar sesión.
+El inicio de sesión utiliza información generada previamente durante el registro y la verificación de correo.
 
-Cuando se alcance el límite, el inicio de sesión normal quedará restringido.
+También se relaciona con:
+
+* Estado de cuenta
+* Roles
+* Permisos
+* Sesiones
+* Seguridad y control de intentos
+* Desbloqueo de cuenta
 
 ---
 
-## 8. Acceso al dashboard
+## 9. Separación de responsabilidades
 
-Después de una autenticación correcta:
+Para mantener el modelo del sistema correctamente definido:
 
-1. Se crea la sesión.
-2. Se identifica el usuario.
-3. Se consultan sus roles y permisos.
-4. Se determina qué funciones puede utilizar.
-5. Se permite el acceso al dashboard correspondiente.
+### Estado de cuenta
 
-Ejemplo:
+Determina si la cuenta puede acceder al sistema.
+
+```text
+Pendiente de verificación
+Activa
+Bloqueada
+Suspendida
+```
+
+### Roles
+
+Determinan qué tipo de funciones puede tener el usuario.
+
+```text
+COMPRADOR
+VENDEDOR
+ADMINISTRADOR
+```
+
+### Sesión
+
+Representa el acceso autenticado actual del usuario.
+
+```text
+Sesión creada
+Sesión activa
+Sesión cerrada/expirada
+```
+
+Por lo tanto:
 
 ```text
 USUARIO
-   │
-   ▼
-USUARIO_ROL
-   │
-   ├────► COMPRADOR
-   │
-   └────► VENDEDOR
+ ├── ESTADO DE CUENTA
+ │      └── Activa
+ │
+ ├── ROLES
+ │      ├── Comprador
+ │      └── Vendedor
+ │
+ └── SESIONES
+        └── Sesión autenticada
 ```
 
-Un usuario que posteriormente obtenga el rol de vendedor seguirá utilizando la misma cuenta.
+---
+
+## 10. Pendientes
+
+Los siguientes aspectos se definirán posteriormente:
+
+* Número máximo de intentos fallidos.
+* Condiciones exactas para aplicar el bloqueo.
+* Duración del bloqueo, si corresponde.
+* Proceso completo de desbloqueo.
+* Vigencia y límites del código/enlace de desbloqueo.
+* Límites de solicitudes de desbloqueo.
+* Reglas detalladas de administración de sesiones.
+* Registro y auditoría de eventos de seguridad.
+
+Estos elementos no deben definirse arbitrariamente dentro del inicio de sesión; serán tratados en sus respectivos módulos.
 
 ---
 
-## 9. Casos especiales
+## 11. Resultado esperado
 
-### CE-LOGIN-01 — Contraseña incorrecta
+Al finalizar correctamente el inicio de sesión:
 
-El sistema:
+1. La cuenta debe encontrarse en estado **Activa**.
+2. Las credenciales deben haber sido validadas correctamente.
+3. El intento fallido acumulado debe reiniciarse.
+4. Debe crearse una sesión autenticada.
+5. El sistema debe identificar los roles y permisos del usuario.
+6. El usuario debe acceder únicamente a las funcionalidades permitidas.
 
-* Rechazará el acceso.
-* Registrará el intento para fines de seguridad.
-* Incrementará el contador de intentos fallidos.
-* Comprobará si corresponde bloquear la cuenta.
-
-### CE-LOGIN-02 — Usuario o correo no encontrado
-
-El sistema rechazará el acceso.
-
-El mensaje mostrado no deberá revelar información innecesaria sobre la existencia de la cuenta.
-
-### CE-LOGIN-03 — Cuenta pendiente de verificación
-
-El sistema rechazará el acceso e informará que el usuario debe verificar su correo electrónico.
-
-### CE-LOGIN-04 — Cuenta bloqueada
-
-El sistema rechazará el inicio de sesión normal y permitirá utilizar el mecanismo de desbloqueo correspondiente.
-
-### CE-LOGIN-05 — Cuenta suspendida
-
-El sistema rechazará el acceso mientras la suspensión administrativa permanezca activa.
-
-### CE-LOGIN-06 — Límite de intentos alcanzado
-
-La cuenta será bloqueada temporalmente y el usuario deberá utilizar el mecanismo de desbloqueo establecido.
-
-### CE-LOGIN-07 — Código de desbloqueo vencido
-
-Si el código supera las 24 horas:
-
-* Será rechazado.
-* No permitirá desbloquear la cuenta.
-* El usuario podrá solicitar un nuevo código según las reglas establecidas.
-
-### CE-LOGIN-08 — Código de desbloqueo utilizado
-
-Un código utilizado anteriormente será rechazado y no podrá volver a utilizarse.
-
-### CE-LOGIN-09 — Nuevo código de desbloqueo
-
-La generación de un nuevo código invalidará el código anterior.
-
-### CE-LOGIN-10 — Error del servidor
-
-Si ocurre un error durante el proceso:
-
-* El sistema mostrará un mensaje comprensible.
-* No permitirá el acceso hasta completar correctamente la autenticación.
-* El error podrá registrarse para revisión técnica.
-
-### CE-LOGIN-11 — Sesión no creada
-
-Si las credenciales son correctas pero no es posible crear la sesión:
-
-* No se deberá conceder acceso al área privada.
-* El usuario deberá recibir un mensaje apropiado.
-* El evento podrá registrarse para revisión técnica.
-
----
-
-## 10. Seguridad
-
-El proceso de inicio de sesión deberá considerar:
-
-* Protección de las credenciales.
-* Almacenamiento seguro de contraseñas.
-* Control de intentos fallidos.
-* Bloqueo temporal ante exceso de intentos.
-* Códigos de desbloqueo temporales y de un solo uso.
-* Validación de autenticación en el servidor.
-* Registro de eventos relevantes de seguridad.
-* Protección de las áreas privadas mediante comprobación de sesión.
-
-La información de seguridad deberá mantenerse separada conceptualmente de los datos básicos del usuario.
-
----
-
-## 11. Estados que afectan al inicio de sesión
-
-| Estado                    | Acceso                                          |
-| ------------------------- | ----------------------------------------------- |
-| Pendiente de verificación | ❌ No permitido                                  |
-| Activa                    | ✅ Permitido                                     |
-| Bloqueada                 | ❌ No permitido mediante inicio de sesión normal |
-| Suspendida                | ❌ No permitido                                  |
-
-**Nota:** El estado `Bloqueada` corresponde a una restricción de seguridad, mientras que `Suspendida` corresponde a una acción administrativa. No representan necesariamente la misma condición dentro del sistema.
-
----
-
-## 12. Relación con otros módulos
-
-El inicio de sesión se relaciona directamente con:
-
-* **Registro de usuario:** proporciona la cuenta y las credenciales iniciales.
-* **Verificación de correo:** determina cuándo una cuenta puede pasar a estado activo.
-* **Recuperación de contraseña:** permite recuperar el acceso cuando el usuario no recuerda su contraseña.
-* **Cierre de sesión:** finaliza la sesión activa.
-* **Gestión de sesiones:** controla la duración y condiciones de las sesiones.
-* **Roles y permisos:** determina las funciones disponibles para el usuario.
-* **Administración de usuarios:** permite aplicar suspensiones y otras acciones administrativas.
-
----
-
-## 13. Pendientes
-
-Los siguientes puntos quedan pendientes de definición:
-
-* Número máximo de intentos fallidos antes del bloqueo.
-* Duración exacta del bloqueo temporal.
-* Cantidad máxima de solicitudes de código de desbloqueo.
-* Tiempo mínimo entre solicitudes de nuevos códigos.
-* Reglas detalladas de conservación de registros de seguridad.
-* Información exacta del dispositivo que se almacenará durante la autenticación.
-* Política definitiva para recuperación de una cuenta bloqueada.
+El inicio de sesión **no crea roles, no modifica el estado de la cuenta y no convierte al usuario en vendedor**.
