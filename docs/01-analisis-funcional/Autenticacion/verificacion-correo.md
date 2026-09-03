@@ -1,113 +1,285 @@
-1 Objetivo
+# Verificación de correo electrónico
 
--Permitir que un usuario confirme su dirección de correo electrónico mediante un enlace de verificación enviado por ROSLYNDER, para validar la cuenta y cambiar su estado de Pendiente de activación a Activa. -El sistema deberá impedir que una cuenta pendiente de activación acceda a las funciones que requieren autenticación hasta completar correctamente la verificación.
-2. Datos
+## 1. Objetivo
 
-    Cuenta: corresponde a la cuenta que se encuentra en estado Pendiente de activación.
-    Correo electrónico: dirección asociada a la cuenta a la que se enviará el enlace de verificación.
-    Enlace de activación: enlace generado por el sistema para verificar la cuenta.
-    Fecha de generación: fecha y hora en que se generó el enlace.
-    Fecha de expiración: fecha y hora hasta la cual el enlace podrá utilizarse.
-    Estado de verificación: indica si la cuenta continúa pendiente o ya fue verificada.
+Confirmar que el usuario tiene acceso al correo electrónico proporcionado durante el registro y permitir la activación de la cuenta mediante un enlace único y temporal.
 
-3. Validaciones
+La verificación es el paso que permite cambiar la cuenta de:
 
-3.1Cuenta
+**Pendiente de verificación → Activa**
 
-    El enlace debe corresponder a una cuenta registrada.
-    El enlace debe encontrarse dentro de su vigencia de 24 horas.
-    El enlace debe ser válido y no haber sido utilizado previamente.
-    Si existe un enlace más reciente para la misma cuenta, los enlaces anteriores deberán considerarse inválidos.
+---
 
-3.3Verificación
+## 2. Datos utilizados
 
-    La verificación deberá realizarse correctamente antes de cambiar el estado de la cuenta.
-    Una verificación exitosa deberá cambiar el estado de Pendiente de activación a Activa.
+### 2.1 Cuenta
 
-4. Reglas de negocio
+* Identificador de la cuenta.
+* Correo electrónico registrado.
+* Estado actual de la cuenta.
 
-    Toda cuenta creada mediante el registro deberá permanecer en estado Pendiente de activación hasta verificar el correo electrónico.
-    El sistema deberá enviar un enlace de activación al correo registrado.
-    El enlace de activación tendrá una vigencia de 24 horas.
-    El enlace de activación será de un solo uso.
-    La utilización correcta del enlace cambiará el estado de la cuenta de Pendiente de activación a Activa.
-    Un enlace expirado no podrá utilizarse para activar la cuenta.
-    Un enlace ya utilizado no podrá utilizarse nuevamente.
-    La generación de un nuevo enlace deberá invalidar el enlace anterior.
-    Una cuenta activa no deberá volver a activarse mediante el proceso de verificación.
-    Una cuenta que no haya completado la verificación no podrá iniciar sesión.
-    La verificación deberá registrarse para fines de seguridad y trazabilidad.
-    Los errores durante la verificación no deberán revelar información técnica ni sensible.
+### 2.2 Token de verificación
 
-5. Flujo
+* Token único.
+* Identificador de la cuenta asociada.
+* Fecha y hora de generación.
+* Fecha y hora de expiración.
+* Estado de utilización.
 
-    El usuario completa correctamente el proceso de registro.
-    El sistema crea la cuenta en estado Pendiente de activación.
-    El sistema genera un enlace de activación.
-    El sistema envía el enlace al correo electrónico registrado.
-    El usuario recibe el correo y selecciona el enlace de activación.
-    El sistema recibe la solicitud de verificación.
-    El sistema valida que el enlace corresponda a una cuenta existente.
-    El sistema verifica que el enlace sea válido y no haya expirado.
-    El sistema verifica que el enlace no haya sido utilizado y que continúe siendo el enlace vigente para la cuenta.
-    Si alguna validación falla, el sistema informa al usuario que el enlace no es válido o ha expirado.
-    Si todas las validaciones son correctas, el sistema confirma la dirección de correo.
-    El sistema cambia el estado de la cuenta de Pendiente de activación a Activa.
-    El sistema invalida el enlace utilizado.
-    El sistema registra la verificación para fines de seguridad y trazabilidad.
-    El sistema informa al usuario que su cuenta ha sido activada correctamente.
-    El usuario podrá iniciar sesión utilizando sus credenciales.
+### 2.3 Control de seguridad
 
-6. Casos especiales
-6.1 Enlace de activación expirado
+* Fecha y hora de la solicitud.
+* Registro de eventos relacionados con la verificación.
+* Información necesaria para aplicar límites de solicitudes.
 
-    Si el usuario intenta utilizar un enlace cuya vigencia de 24 horas ha finalizado, el sistema no permitirá activar la cuenta.
-    El sistema informará que el enlace ha expirado.
-    La cuenta permanecerá en estado Pendiente de activación.
-    El usuario podrá solicitar un nuevo enlace de activación cuando corresponda.
+---
 
-6.2 Enlace de activación inválido
+## 3. Validaciones
 
-    Si el enlace no corresponde a una cuenta registrada o no contiene una referencia válida para realizar la verificación, el sistema no permitirá activar la cuenta.
-    El sistema informará que el enlace no es válido.
-    La cuenta no deberá modificar su estado como consecuencia de un enlace inválido.
+El sistema debe comprobar:
 
-6.3 Enlace de activación ya utilizado
+* Que el token exista.
+* Que el token corresponda a una cuenta válida.
+* Que el token corresponda al proceso de verificación de esa cuenta.
+* Que el token no haya expirado.
+* Que el token no haya sido utilizado anteriormente.
+* Que la cuenta se encuentre en estado **Pendiente de verificación**.
+* Que el token sea válido en el servidor.
 
-    Si el usuario intenta utilizar nuevamente un enlace que ya fue utilizado, el sistema no realizará una nueva activación.
-    El sistema informará que el enlace ya no es válido.
-    Si la cuenta ya se encuentra activa, el usuario podrá continuar con el inicio de sesión.
+La validación realizada mediante HTML o JavaScript en el navegador es únicamente complementaria. La validación definitiva debe realizarse en el servidor.
 
-6.4 Enlace anterior invalidado
+---
 
-    Si el usuario solicita un nuevo enlace de activación, el enlace anterior dejará de ser válido.
-    Si posteriormente intenta utilizar el enlace anterior, el sistema no permitirá la activación.
-    El usuario deberá utilizar el enlace más reciente.
+## 4. Reglas de negocio
 
-6.5 Cuenta ya activa
+### RN-VER-01 — Estado inicial
 
-    Si el usuario intenta utilizar un enlace de activación correspondiente a una cuenta que ya se encuentra Activa, el sistema no deberá modificar nuevamente el estado de la cuenta.
-    El sistema podrá informar que la cuenta ya se encuentra activada.
-    El usuario podrá continuar con el inicio de sesión.
+Toda cuenta creada correctamente mediante el registro comienza en estado:
 
-6.6 Error durante la verificación
+**Pendiente de verificación**
 
-    Si ocurre un error interno durante el proceso de verificación, el sistema no deberá activar la cuenta de forma parcial o incorrecta.
-    El sistema deberá mostrar un mensaje comprensible al usuario.
-    No se deberán mostrar detalles técnicos ni información sensible.
-    El error deberá registrarse internamente para facilitar su diagnóstico y seguimiento.
-    El usuario podrá intentar nuevamente cuando el servicio se encuentre disponible.
+### RN-VER-02 — Envío del enlace
 
-6.7 Pérdida de conexión durante la verificación
+El sistema debe enviar al correo registrado un enlace único de verificación después de completar correctamente el registro.
 
-    Si se pierde la conexión durante el proceso de verificación, el sistema deberá evitar cambios incompletos en el estado de la cuenta.
-    Si la verificación no pudo completarse, la cuenta deberá permanecer en el estado que tenía antes del intento.
-    El usuario podrá volver a utilizar un enlace válido mientras este continúe vigente.
+### RN-VER-03 — Vigencia
 
-## 7. Pendientes
+El enlace de verificación tendrá una vigencia de **24 horas**.
 
-- Definir el mecanismo para solicitar nuevamente el enlace de activación.
-- Definir el límite de solicitudes de nuevos enlaces de activación y el intervalo entre solicitudes.
-- Definir qué información relacionada con la verificación se registrará para fines de seguridad y trazabilidad.
-- Definir posteriormente el mecanismo técnico para generar, almacenar y validar los enlaces de activación.
+### RN-VER-04 — Uso único
 
+Cada enlace solamente podrá utilizarse una vez.
+
+### RN-VER-05 — Token inválido
+
+Un token inexistente, manipulado o inválido no podrá activar la cuenta.
+
+### RN-VER-06 — Token vencido
+
+Un token que haya superado su vigencia no podrá utilizarse.
+
+### RN-VER-07 — Nuevo enlace
+
+Cuando se genere un nuevo enlace de verificación, el enlace anterior deberá quedar invalidado.
+
+### RN-VER-08 — Activación
+
+Cuando el usuario utilice correctamente un enlace válido:
+
+```text
+PENDIENTE DE VERIFICACIÓN
+          ↓
+        ACTIVA
+```
+
+### RN-VER-09 — Inicio de sesión
+
+Una cuenta en estado **Pendiente de verificación** no podrá iniciar sesión.
+
+### RN-VER-10 — Cuenta ya activa
+
+Si la cuenta ya se encuentra activa, un enlace antiguo de verificación no deberá modificar nuevamente su estado.
+
+### RN-VER-11 — Enlace utilizado
+
+Un enlace que ya fue utilizado no podrá utilizarse nuevamente.
+
+### RN-VER-12 — Correo registrado
+
+El enlace debe estar asociado al correo electrónico utilizado para crear la cuenta.
+
+### RN-VER-13 — Registro de verificación
+
+El sistema debe registrar la fecha y hora en que se realizó correctamente la verificación.
+
+### RN-VER-14 — Seguridad
+
+Las solicitudes de generación y reenvío de enlaces deben estar sujetas a mecanismos de control para evitar abuso.
+
+---
+
+## 5. Flujo principal
+
+```text
+PENDIENTE DE VERIFICACIÓN
+          ↓
+Usuario recibe correo
+          ↓
+Usuario accede al enlace
+          ↓
+Sistema recibe token
+          ↓
+Valida token
+          ↓
+¿Token válido?
+   ├── NO
+   │    ↓
+   │  Mostrar motivo
+   │
+   └── SÍ
+        ↓
+   Marcar token como utilizado
+        ↓
+   Cambiar estado
+        ↓
+      ACTIVA
+        ↓
+   Permitir inicio de sesión
+```
+
+---
+
+## 6. Flujo de enlace vencido
+
+```text
+Usuario utiliza enlace
+        ↓
+Sistema valida token
+        ↓
+Token vencido
+        ↓
+No activar cuenta
+        ↓
+Cuenta continúa:
+PENDIENTE DE VERIFICACIÓN
+        ↓
+Solicitar nuevo enlace
+```
+
+---
+
+## 7. Flujo de nuevo enlace
+
+```text
+Cuenta PENDIENTE
+       ↓
+Usuario solicita nuevo enlace
+       ↓
+Sistema valida solicitud
+       ↓
+Invalida enlace anterior
+       ↓
+Genera nuevo token
+       ↓
+Establece nueva vigencia
+       ↓
+Envía nuevo enlace
+```
+
+Los límites exactos para solicitar nuevos enlaces quedan pendientes de definición.
+
+---
+
+## 8. Casos especiales
+
+### CE-VER-01 — Correo no recibido
+
+El usuario podrá solicitar un nuevo enlace, sujeto a los límites de seguridad.
+
+### CE-VER-02 — Enlace vencido
+
+El sistema debe informar que el enlace ya no es válido y permitir solicitar uno nuevo.
+
+### CE-VER-03 — Enlace ya utilizado
+
+El sistema debe informar que el enlace ya fue utilizado.
+
+### CE-VER-04 — Cuenta ya activa
+
+Si el usuario accede mediante un enlace antiguo después de haber verificado su cuenta, el sistema no debe modificar nuevamente el estado.
+
+### CE-VER-05 — Token inexistente
+
+El sistema debe rechazar el token y no modificar el estado de la cuenta.
+
+### CE-VER-06 — Token manipulado
+
+El sistema debe rechazar cualquier token que no pueda validarse correctamente.
+
+### CE-VER-07 — Solicitudes repetidas
+
+Las solicitudes de nuevos enlaces deben estar limitadas para evitar abuso.
+
+### CE-VER-08 — Error de envío
+
+Si ocurre un error al enviar el correo, la cuenta debe permanecer en estado **Pendiente de verificación** y debe poder solicitarse posteriormente un nuevo enlace.
+
+### CE-VER-09 — Error del servidor
+
+Si ocurre un error durante la verificación, el sistema no debe cambiar el estado de la cuenta hasta completar correctamente todas las validaciones.
+
+---
+
+## 9. Estados involucrados
+
+La verificación de correo interviene directamente en esta transición:
+
+```text
+PENDIENTE DE VERIFICACIÓN
+          │
+          │ verificación válida
+          ▼
+        ACTIVA
+```
+
+No es responsabilidad de este módulo realizar las transiciones:
+
+```text
+ACTIVA → BLOQUEADA
+ACTIVA → SUSPENDIDA
+```
+
+Estas corresponden respectivamente a los procesos de seguridad y administración.
+
+---
+
+## 10. Relación con otros módulos
+
+```text
+REGISTRO
+   │
+   ▼
+PENDIENTE DE VERIFICACIÓN
+   │
+   ▼
+VERIFICACIÓN DE CORREO
+   │
+   ▼
+ACTIVA
+   │
+   ▼
+INICIO DE SESIÓN
+```
+
+---
+
+## 11. Pendientes
+
+Queda por definir:
+
+* Límite de solicitudes de verificación.
+* Límite de reenvíos.
+* Política de retención de tokens.
+* Política para cuentas que permanezcan pendientes durante periodos prolongados.
+* Mensajes exactos mostrados al usuario.
+* Mecanismos específicos de registro y auditoría de los eventos de verificación.
